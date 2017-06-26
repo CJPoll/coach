@@ -1,0 +1,2 @@
+defmodule Coach do
+end
