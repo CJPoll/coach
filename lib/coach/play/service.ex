@@ -10,7 +10,7 @@ defmodule Coach.Play.Service do
 
   @type t :: %__MODULE__{
     services: [service],
-    action: action
+    action: action | nil
   }
 
   @spec new() :: t
