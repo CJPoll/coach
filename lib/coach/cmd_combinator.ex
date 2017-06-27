@@ -1,6 +1,6 @@
 defmodule Coach.Cmd.Combinator do
   alias Coach.Cmd
-  @type t :: And.t | Or.t
+  @type t :: And.t | Or.t | Ensure.t
 
   @type command :: Cmd.t | t
 
@@ -12,6 +12,16 @@ defmodule Coach.Cmd.Combinator do
   defmodule Or do
     defstruct [first: nil, second: nil]
     @type t :: %__MODULE__{}
+  end
+
+  defmodule Ensure do
+    defstruct [first: nil, second: nil]
+    @type t :: %__MODULE__{}
+  end
+
+  @spec ensure(command, command) :: t
+  def ensure(first, second) do
+    %Ensure{first: first, second: second}
   end
 
   @spec then(command, command) :: t
@@ -41,5 +51,12 @@ defmodule Coach.Cmd.Combinator do
       0 -> result
       _ -> Cmd.run(second)
     end
+  end
+
+  def run(%Ensure{first: first, second: second}) do
+    result = Cmd.run(first)
+    Cmd.run(second)
+
+    result
   end
 end

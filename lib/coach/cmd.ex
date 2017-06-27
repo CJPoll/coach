@@ -32,12 +32,21 @@ defmodule Coach.Cmd do
     opts: opts
   }
 
-  @type func :: %Function{
-    module: module | nil,
-    function: atom | nil,
-    args: [term],
-    func: ((...) -> term) | nil
+  @typep anon_func :: %Function{
+    module: nil,
+    function: nil,
+    args: [],
+    func: ((...) -> term)
   }
+
+  @typep mfa_func :: %Function{
+    module: module,
+    function: atom,
+    args: [term],
+    func: nil
+  }
+
+  @type func :: anon_func | mfa_func
 
   @type t :: cmd | func | Coach.Cmd.Combinator.t
 
