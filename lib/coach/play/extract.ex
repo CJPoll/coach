@@ -1,6 +1,4 @@
 defmodule Coach.Play.Extract do
-  alias Coach.Cmd
-
   defstruct [:destination, :source, strip_components: nil, keep_newer_files: nil]
   @type t :: %__MODULE__{}
 
@@ -24,44 +22,47 @@ defmodule Coach.Play.Extract do
     %__MODULE__{extractor | strip_components: count}
   end
 
-  @spec to_cmd(t) :: Cmd.t | no_return
-  def to_cmd(%__MODULE__{source: nil}) do
+  @spec to_file(t, Path.t) :: t
+  def to_file(extractor, destination) do
+    %__MODULE__{extractor | destination: destination}
+  end
+end
+
+defimpl Commandable, for: Coach.Play.Extract do
+  alias Coach.Cmd.Shell
+
+  def to_cmd(%Coach.Play.Extract{source: nil}) do
     raise "Can't extract file: Missing source"
   end
 
-  def to_cmd(%__MODULE__{source: source} = extractor) do
+  def to_cmd(%Coach.Play.Extract{source: source} = extractor) do
     cmd =
-      Cmd.new()
-      |> Cmd.with_command("tar")
-      |> Cmd.with_flag("-x")
-      |> Cmd.with_flag("-v")
-      |> Cmd.with_flag("-f")
-      |> Cmd.with_value(source)
+      Shell.new()
+      |> Shell.with_command("tar")
+      |> Shell.with_flag("-x")
+      |> Shell.with_flag("-v")
+      |> Shell.with_flag("-f")
+      |> Shell.with_value(source)
 
     cmd =
       case extractor.strip_components do
         nil -> cmd
         count when is_integer(count) ->
-          Cmd.with_flag(cmd, "--strip-components", Integer.to_string(count))
+          Shell.with_flag(cmd, "--strip-components", Integer.to_string(count))
         count when is_binary(count) ->
-          Cmd.with_flag(cmd, "--strip-components", count)
+          Shell.with_flag(cmd, "--strip-components", count)
       end
 
     cmd =
       case extractor.destination do
         nil -> cmd
         destination when is_binary(destination) ->
-          Cmd.with_flag(cmd, "-C", destination)
+          Shell.with_flag(cmd, "-C", destination)
       end
 
     case extractor.keep_newer_files do
       nil -> cmd
-      true -> Cmd.with_flag(cmd, "--keep-newer-files")
+      true -> Shell.with_flag(cmd, "--keep-newer-files")
     end
-  end
-
-  @spec to_file(t, Path.t) :: t
-  def to_file(extractor, destination) do
-    %__MODULE__{extractor | destination: destination}
   end
 end

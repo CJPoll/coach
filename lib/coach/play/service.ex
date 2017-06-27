@@ -1,6 +1,6 @@
 defmodule Coach.Play.Service do
   alias Coach.Cmd
-  alias Coach.Cmd.Combinator
+  alias Coach.Cmd.{Combinator, Shell}
 
   @type action :: :start | :stop | :restart
   @type service :: String.t
@@ -54,13 +54,13 @@ defmodule Coach.Play.Service do
   @spec to_cmd(t, Coach.Os.os) :: Cmd.t
   defp to_cmd(%__MODULE__{} = intent, :mac) do
     action =
-      Cmd.new()
-      |> Cmd.with_command("brew")
-      |> Cmd.with_value("services")
-      |> Cmd.with_value("#{intent.action}")
+      Shell.new()
+      |> Shell.with_command("brew")
+      |> Shell.with_value("services")
+      |> Shell.with_value("#{intent.action}")
 
     intent.services
-    |> Enum.map(fn(service) -> Cmd.with_value(action, service) end)
+    |> Enum.map(fn(service) -> Shell.with_value(action, service) end)
     |> Enum.reduce(fn(right, left) -> Combinator.then(left, right) end)
   end
 

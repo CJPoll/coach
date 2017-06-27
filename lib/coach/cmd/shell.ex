@@ -1,8 +1,4 @@
-defmodule Coach.Cmd do
-  defmodule Function do
-    defstruct [module: nil, function: nil, args: [], func: nil]
-  end
-
+defmodule Coach.Cmd.Shell do
   @type arg0 :: String.t
   @type argument :: flag | value
   @type command :: String.t
@@ -12,7 +8,7 @@ defmodule Coach.Cmd do
   @type flag :: String.t # "-flag", "-f"
   @type status_code :: non_neg_integer
   @type value :: String.t
-  @type cmd_return :: {term, status_code}
+  @type return :: {term, status_code}
 
   @typep arguments :: [argument]
   @type env :: [{env_var_name, env_var_value}]
@@ -32,23 +28,9 @@ defmodule Coach.Cmd do
     opts: opts
   }
 
-  @typep anon_func :: %Function{
-    module: nil,
-    function: nil,
-    args: [],
-    func: ((...) -> term)
-  }
+  alias Coach.Combinator
 
-  @typep mfa_func :: %Function{
-    module: module,
-    function: atom,
-    args: [term],
-    func: nil
-  }
-
-  @type func :: anon_func | mfa_func
-
-  @type t :: cmd | func | Coach.Cmd.Combinator.t
+  @type t :: cmd | Combinator.t
 
   @opts [:into, :cd, :env, :arg0, :stderr_to_stdout, :parallelism]
 
@@ -108,16 +90,6 @@ defmodule Coach.Cmd do
     end)
   end
 
-  @spec from_function((() -> term)) :: Cmd.t
-  def from_function(func) do
-    %Function{func: func}
-  end
-
-  @spec from_function(module, atom, [term]) :: Cmd.t
-  def from_function(module, function, args) do
-    %Function{module: module, function: function, args: args}
-  end
-
   @spec has_value?(t, value) :: boolean
   def has_value?(%__MODULE__{args: args}, value) do
     Enum.any?(args, fn
@@ -131,20 +103,7 @@ defmodule Coach.Cmd do
     %__MODULE__{}
   end
 
-  @spec run(t) :: cmd_return
-  def run(%Function{module: module, function: function, args: args})
-  when is_atom(module) and module != nil
-  and is_atom(function) and function != nil
-  and is_list(args) do
-    result = :erlang.apply(module, function, args)
-    {result, 0}
-  end
-
-  def run(%Function{func: func}) when func != nil do
-    result = func.()
-    {result, 0}
-  end
-
+  @spec run(t) :: return
   def run(%__MODULE__{command: nil}) do
     raise "Cmd command has not ben set!"
   end
@@ -153,10 +112,6 @@ defmodule Coach.Cmd do
     IO.puts("Running: #{__MODULE__.to_string(cmd)}")
 
     do_run(cmd)
-  end
-
-  def run(command) do
-    __MODULE__.Combinator.run(command)
   end
 
   def do_run(%__MODULE__{command: command, opts: opts} = cmd) do
@@ -221,14 +176,14 @@ defmodule Coach.Cmd do
   end
 end
 
-defimpl String.Chars, for: Coach.Cmd do
-  def to_string(%Coach.Cmd{} = cmd) do
-    Coach.Cmd.to_string(cmd)
+defimpl String.Chars, for: Coach.Cmd.Shell do
+  def to_string(%Coach.Cmd.Shell{} = cmd) do
+    Coach.Cmd.Shell.to_string(cmd)
   end
 end
 
-defimpl Inspect, for: Coach.Cmd do
-  def inspect(%Coach.Cmd{} = cmd, _opts) do
+defimpl Inspect, for: Coach.Cmd.Shell do
+  def inspect(%Coach.Cmd.Shell{} = cmd, _opts) do
     str = String.Chars.to_string(cmd)
     "#Coach.Cmd<#{str}>"
   end

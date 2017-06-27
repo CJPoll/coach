@@ -38,18 +38,20 @@ defmodule Coach.Cmd.Combinator do
   def run(%And{first: first, second: second}) do
     result = Cmd.run(first)
 
-    case Cmd.status_code(result) do
-      0 -> Cmd.run(second)
-      _ -> result
+    if Cmd.success?(result) do
+      Cmd.run(second)
+    else
+      result
     end
   end
 
   def run(%Or{first: first, second: second}) do
     result = Cmd.run(first)
 
-    case Cmd.status_code(result) do
-      0 -> result
-      _ -> Cmd.run(second)
+    if Cmd.success?(result) do
+      result
+    else
+      Cmd.run(second)
     end
   end
 

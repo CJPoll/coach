@@ -1,6 +1,4 @@
 defmodule Coach.Play.Git.Clone do
-  alias Coach.Cmd
-
   defstruct [
     :repo,
     :directory
@@ -23,17 +21,20 @@ defmodule Coach.Play.Git.Clone do
   def new() do
     %__MODULE__{}
   end
+end
 
-  @spec to_cmd(t) :: Cmd.t
-  def to_cmd(%__MODULE__{repo: repo} = cloner) do
+defimpl Commandable, for: Coach.Play.Git.Clone do
+  alias Coach.Cmd.Shell
+
+  def to_cmd(%Coach.Play.Git.Clone{repo: repo} = commandable) do
     cmd =
-      Cmd.new()
-      |> Cmd.with_command("git")
-      |> Cmd.with_value("clone")
-      |> Cmd.with_value(repo)
+      Shell.new()
+      |> Shell.with_command("git")
+      |> Shell.with_value("clone")
+      |> Shell.with_value(repo)
 
-    if cloner.directory do
-      Cmd.with_value(cmd, cloner.directory)
+    if commandable.directory do
+      Shell.with_value(cmd, commandable.directory)
     else
       cmd
     end

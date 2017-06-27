@@ -1,8 +1,13 @@
 defmodule Coach.File do
-  alias Coach.Cmd
+  alias Coach.Cmd.{Function, Shell}
 
   @typep download_bin :: :curl | :wget
   @type file_type :: :dir | :file
+
+  @spec copy(Path.t, Path.t) :: Cmd.t
+  def copy(from, to) do
+    Function.from_function(File, :cp, [from, to])
+  end
 
   @spec download(URI.t, Path.t)
   :: Cmd.t
@@ -28,32 +33,32 @@ defmodule Coach.File do
   def download_cmd(:curl, %URI{} = uri, path) do
     url = URI.to_string(uri)
 
-    Cmd.new
-    |> Cmd.with_command("curl")
-    |> Cmd.with_flag("--location")
-    |> Cmd.with_flag("-o", path)
-    |> Cmd.with_flag("--create-dirs")
-    |> Cmd.with_value(url)
+    Shell.new
+    |> Shell.with_command("curl")
+    |> Shell.with_flag("--location")
+    |> Shell.with_flag("-o", path)
+    |> Shell.with_flag("--create-dirs")
+    |> Shell.with_value(url)
   end
 
   def download_cmd(:wget, %URI{} = uri, path) do
     url = URI.to_string(uri)
 
-    Cmd.new
-    |> Cmd.with_command("wget")
-    |> Cmd.with_flag("-O", path)
-    |> Cmd.with_value(url)
+    Shell.new
+    |> Shell.with_command("wget")
+    |> Shell.with_flag("-O", path)
+    |> Shell.with_value(url)
   end
 
   @spec ensure_deleted(Path.t) :: Cmd.t
   def ensure_deleted(path) do
-    Cmd.from_function(fn ->
+    Function.from_function(fn ->
       if File.exists?(path) do
-        Cmd.new()
-        |> Cmd.with_command("rm")
-        |> Cmd.with_flag("-r")
-        |> Cmd.with_flag("-f")
-        |> Cmd.with_value(path)
+        Shell.new()
+        |> Shell.with_command("rm")
+        |> Shell.with_flag("-r")
+        |> Shell.with_flag("-f")
+        |> Shell.with_value(path)
         |> Cmd.run
       end
     end)
@@ -71,11 +76,11 @@ defmodule Coach.File do
   @spec extract(Path.t)
   :: Cmd.t
   def extract(tarball) do
-    Cmd.new
-    |> Cmd.with_command("tar")
-    |> Cmd.with_flag("-x")
-    |> Cmd.with_flag("-v")
-    |> Cmd.with_flag("-f")
-    |> Cmd.with_value(tarball)
+    Shell.new
+    |> Shell.with_command("tar")
+    |> Shell.with_flag("-x")
+    |> Shell.with_flag("-v")
+    |> Shell.with_flag("-f")
+    |> Shell.with_value(tarball)
   end
 end
