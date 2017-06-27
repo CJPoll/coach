@@ -2,6 +2,7 @@ defmodule Coach.File do
   alias Coach.Cmd
 
   @typep download_bin :: :curl | :wget
+  @type file_type :: :dir | :file
 
   @spec download(URI.t, Path.t)
   :: Cmd.t
@@ -42,6 +43,28 @@ defmodule Coach.File do
     |> Cmd.with_command("wget")
     |> Cmd.with_flag("-O", path)
     |> Cmd.with_value(url)
+  end
+
+  @spec ensure_deleted(Path.t) :: Cmd.t
+  def ensure_deleted(path) do
+    Cmd.from_function(fn ->
+      if File.exists?(path) do
+        Cmd.new()
+        |> Cmd.with_command("rm")
+        |> Cmd.with_flag("-r")
+        |> Cmd.with_flag("-f")
+        |> Cmd.with_value(path)
+      end
+    end)
+  end
+
+  @spec ensure_exists(Path.t, file_type) :: Cmd.t
+  def ensure_exists(path, :dir) do
+    Cmd.from_function(fn ->
+      unless File.exists?(path) do
+        File.mkdir_p(path)
+      end
+    end)
   end
 
   @spec extract(Path.t)

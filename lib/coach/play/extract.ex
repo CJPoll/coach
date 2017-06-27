@@ -24,7 +24,7 @@ defmodule Coach.Play.Extract do
   end
 
   @spec to_cmd(t) :: Cmd.t | no_return
-  def to_command(%__MODULE__{source: nil}) do
+  def to_cmd(%__MODULE__{source: nil}) do
     raise "Can't extract file: Missing source"
   end
 
