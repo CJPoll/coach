@@ -1,5 +1,6 @@
 defmodule Coach.Play.Extract do
   alias Coach.Cmd
+
   defstruct [:destination, :source, strip_components: nil, keep_newer_files: nil]
   @type t :: %__MODULE__{}
 

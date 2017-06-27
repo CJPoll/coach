@@ -54,6 +54,7 @@ defmodule Coach.File do
         |> Cmd.with_flag("-r")
         |> Cmd.with_flag("-f")
         |> Cmd.with_value(path)
+        |> Cmd.run
       end
     end)
   end
