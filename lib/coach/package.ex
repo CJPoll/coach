@@ -3,7 +3,7 @@ defmodule Coach.PackageInstaller do
   @type t :: %__MODULE__{}
   @type package :: String.t
 
-  alias Coach.Cmd
+  alias Coach.Cmd.Shell
 
   def new() do
     %__MODULE__{}
@@ -19,16 +19,16 @@ defmodule Coach.PackageInstaller do
 
   def to_cmd(%__MODULE__{} = installer, :mac) do
     cmd =
-      Cmd.new
-      |> Cmd.with_command("brew")
-      |> Cmd.with_value("install")
+      Shell.new
+      |> Shell.with_command("brew")
+      |> Shell.with_value("install")
 
     packages = Map.get(installer, :mac, [])
 
     packages
     |> :lists.reverse
     |> Enum.reduce(cmd, fn(package, cmd) ->
-      Cmd.with_value(cmd, package)
+      Shell.with_value(cmd, package)
     end)
   end
 end

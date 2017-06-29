@@ -1,17 +1,26 @@
 defmodule Coach.Play.Service do
   alias Coach.Cmd
-  alias Coach.Cmd.{Combinator, Shell}
 
   @type action :: :start | :stop | :restart
   @type service :: String.t
   @actions [:start, :stop, :restart]
 
-  defstruct [services: [], action: nil]
+  defstruct [action: nil, services: [], os: nil]
 
   @type t :: %__MODULE__{
     services: [service],
-    action: action | nil
+    action: action | nil,
+    os: Coach.Os.os | nil
   }
+
+  @doc """
+  This function is only needed for testing.
+  By default, Coach.Play.Service will detect which OS you are running on.
+  """
+  @spec for_os(t, Coach.Os.os) :: t
+  def for_os(%__MODULE__{} = commandable, os) do
+    %__MODULE__{commandable | os: os}
+  end
 
   @spec new() :: t
   def new() do
@@ -45,44 +54,50 @@ defmodule Coach.Play.Service do
     bulk_action(services, :restart)
   end
 
-  @spec to_cmd(t) :: Cmd.t
-  def to_cmd(%__MODULE__{} = intent) do
-    os = Coach.Os.current_os()
-    to_cmd(intent, os)
+  @spec with_service(t, service) :: t
+  def with_service(%__MODULE__{} = commandable, service) when is_binary(service) do
+    %__MODULE__{commandable | services: [service | commandable.services]}
   end
 
-  @spec to_cmd(t, Coach.Os.os) :: Cmd.t
-  defp to_cmd(%__MODULE__{} = intent, :mac) do
+  @spec with_action(t, action) :: t
+  def with_action(%__MODULE__{} = commandable, action) when action in @actions do
+    %__MODULE__{commandable | action: action}
+  end
+
+  @doc false
+  @spec bulk_action([service], action) :: t
+  defp bulk_action(services, action) do
+    commandable = new() |> with_action(action)
+
+    services
+    |> :lists.reverse
+    |> Enum.reduce(commandable, fn(service, %__MODULE__{} = commandable) ->
+      with_service(commandable, service)
+    end)
+  end
+end
+
+defimpl Commandable, for: Coach.Play.Service do
+  alias Coach.Cmd.{Combinator, Shell}
+
+  def to_cmd(%Coach.Play.Service{os: nil} = commandable) do
+    os = Coach.Os.current_os()
+    to_cmd(%Coach.Play.Service{commandable | os: os})
+  end
+
+  def to_cmd(%Coach.Play.Service{action: nil}) do
+    raise "Coach.Play.Service requires you to set an action"
+  end
+
+  def to_cmd(%Coach.Play.Service{os: :mac} = commandable) do
     action =
       Shell.new()
       |> Shell.with_command("brew")
       |> Shell.with_value("services")
-      |> Shell.with_value("#{intent.action}")
+      |> Shell.with_value("#{commandable.action}")
 
-    intent.services
+    commandable.services
     |> Enum.map(fn(service) -> Shell.with_value(action, service) end)
     |> Enum.reduce(fn(right, left) -> Combinator.then(left, right) end)
-  end
-
-  @spec with_service(t, service) :: t
-  def with_service(%__MODULE__{} = intent, service) when is_binary(service) do
-    %__MODULE__{intent | services: [service | intent.services]}
-  end
-
-  @spec with_action(t, action) :: t
-  def with_action(%__MODULE__{} = intent, action) when action in @actions do
-    %__MODULE__{intent | action: action}
-  end
-
-  @spec bulk_action([service], action) :: Cmd.t
-  defp bulk_action(services, action) do
-    intent = new() |> with_action(action)
-
-    services
-    |> :lists.reverse
-    |> Enum.reduce(intent, fn(service, %__MODULE__{} = intent) ->
-      with_service(intent, service)
-    end)
-    |> to_cmd
   end
 end

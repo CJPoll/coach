@@ -1,4 +1,8 @@
 defmodule Coach.Play.Git.Clone do
+  defmodule RepoNotSpecified do
+    defexception [message: "Repo not specified for git clone"]
+  end
+
   defstruct [
     :repo,
     :directory
@@ -26,17 +30,15 @@ end
 defimpl Commandable, for: Coach.Play.Git.Clone do
   alias Coach.Cmd.Shell
 
-  def to_cmd(%Coach.Play.Git.Clone{repo: repo} = commandable) do
-    cmd =
-      Shell.new()
-      |> Shell.with_command("git")
-      |> Shell.with_value("clone")
-      |> Shell.with_value(repo)
+  def to_cmd(%Coach.Play.Git.Clone{repo: repo} = commandable) when is_binary(repo) do
+    Shell.new()
+    |> Shell.with_command("git")
+    |> Shell.with_value("clone")
+    |> Shell.with_value(repo)
+    |> Shell.with_value(commandable.directory, [if: commandable.directory])
+  end
 
-    if commandable.directory do
-      Shell.with_value(cmd, commandable.directory)
-    else
-      cmd
-    end
+  def to_cmd(%Coach.Play.Git.Clone{repo: nil}) do
+    raise Coach.Play.Git.Clone.RepoNotSpecified
   end
 end

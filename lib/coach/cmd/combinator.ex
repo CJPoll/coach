@@ -2,7 +2,7 @@ defmodule Coach.Cmd.Combinator do
   alias Coach.Cmd
   @type t :: And.t | Or.t | Ensure.t
 
-  @type command :: Cmd.t | t
+  @type combinable :: Cmd.t | t
 
   defmodule And do
     defstruct [first: nil, second: nil]
@@ -19,17 +19,17 @@ defmodule Coach.Cmd.Combinator do
     @type t :: %__MODULE__{}
   end
 
-  @spec ensure(command, command) :: t
+  @spec ensure(combinable, combinable) :: t
   def ensure(first, second) do
     %Ensure{first: first, second: second}
   end
 
-  @spec then(command, command) :: t
+  @spec then(combinable, combinable) :: t
   def then(first, second) do
     %And{first: first, second: second}
   end
 
-  @spec otherwise(command, command) :: t
+  @spec otherwise(combinable, combinable) :: t
   def otherwise(first, second) do
     %Or{first: first, second: second}
   end

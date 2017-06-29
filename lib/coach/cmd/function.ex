@@ -19,7 +19,7 @@ defmodule Coach.Cmd.Function do
 
   @spec from_function((() -> term)) :: t
   def from_function(func) when is_function(func) do
-    %__MODULE__{func: func}
+    %__MODULE__{func: func, args: []}
   end
 
   @spec from_function(((...) -> term), [term]) :: t
@@ -33,7 +33,7 @@ defmodule Coach.Cmd.Function do
     %__MODULE__{module: module, function: function, args: args}
   end
 
-  @spec run(t) :: {:ok, term} | {:error, term}
+  @spec run(t) :: term
   def run(%__MODULE__{module: module, function: function, args: args})
   when is_atom(module) and module != nil
   and is_atom(function) and function != nil
@@ -43,7 +43,12 @@ defmodule Coach.Cmd.Function do
 
   def run(%__MODULE__{func: func, args: args})
   when is_function(func) and is_list(args) do
-    result = :erlang.apply(func, args)
-    {result, 0}
+    :erlang.apply(func, args)
+  end
+end
+
+defimpl Commandable, for: Coach.Cmd.Function do
+  def to_cmd(t) do
+    t
   end
 end

@@ -2,6 +2,8 @@ defmodule Coach.Cmd.Shell do
   @type arg0 :: String.t
   @type argument :: flag | value
   @type command :: String.t
+  @type condition :: {:if, conditional} | {:unless, conditional}
+  @type conditional :: (() -> term) | {((...) -> term), [term]} | {module, atom, [term]} | term
   @type directory :: String.t
   @type env_var_name :: String.t
   @type env_var_value :: String.t
@@ -10,7 +12,7 @@ defmodule Coach.Cmd.Shell do
   @type value :: String.t
   @type return :: {term, status_code}
 
-  @typep arguments :: [argument]
+  @typep arguments :: [argument] | []
   @type env :: [{env_var_name, env_var_value}]
   @type maybe(t) :: t | nil
 
@@ -22,19 +24,15 @@ defmodule Coach.Cmd.Shell do
     optional(:stderr_to_stdout) => boolean
   }
 
-  @type cmd :: %__MODULE__{
-    command: maybe(command),
+  defstruct [args: [], command: nil, opts: %{}]
+
+  @type t :: %__MODULE__{
     args: arguments,
+    command: maybe(command),
     opts: opts
   }
 
-  alias Coach.Combinator
-
-  @type t :: cmd | Combinator.t
-
   @opts [:into, :cd, :env, :arg0, :stderr_to_stdout, :parallelism]
-
-  defstruct [args: [], background: false, command: nil, opts: %{}]
 
   @spec arg_list(t) :: [String.t]
   def arg_list(%__MODULE__{} = cmd) do
@@ -48,11 +46,6 @@ defmodule Coach.Cmd.Shell do
     cmd
     |> arg_list
     |> Enum.join(" ")
-  end
-
-  @spec background(t) :: t
-  def background(%__MODULE__{} = cmd) do
-    %__MODULE__{cmd | background: true}
   end
 
   @spec command(t) :: String.t
@@ -114,7 +107,7 @@ defmodule Coach.Cmd.Shell do
     do_run(cmd)
   end
 
-  def do_run(%__MODULE__{command: command, opts: opts} = cmd) do
+  defp do_run(%__MODULE__{command: command, opts: opts} = cmd) do
     System.cmd(command, build_args(cmd), Map.to_list(opts))
   end
 
@@ -132,13 +125,23 @@ defmodule Coach.Cmd.Shell do
   end
 
   @spec with_flag(t, flag) :: t
-  def with_flag(%__MODULE__{} = cmd, flag) when is_binary(flag) do
-    add_arg(cmd, {:flag, flag})
+  def with_flag(%__MODULE__{} = cmd, flag) do
+    with_flag(cmd, flag, [])
   end
 
-  @spec with_flag(t, flag, value) :: t
+  @spec with_flag(t, flag, [condition] | value) :: t
+  def with_flag(%__MODULE__{} = cmd, flag, conditions) when is_binary(flag) and is_list(conditions) do
+    if Enum.all?(conditions, &condition_met?/1), do: add_arg(cmd, {:flag, flag}), else: cmd
+  end
+
   def with_flag(%__MODULE__{} = cmd, flag, value) when is_binary(flag) and is_binary(value) do
-    add_arg(cmd, {:flag, flag, value})
+    with_flag(cmd, flag, value, [])
+  end
+
+  @spec with_flag(t, flag, value, [condition]) :: t
+  def with_flag(%__MODULE__{} = cmd, flag, value, conditions)
+  when is_binary(flag) and is_list(conditions) do
+    if Enum.all?(conditions, &condition_met?/1), do: add_arg(cmd, {:flag, flag, value}), else: cmd
   end
 
   def with_opts(%__MODULE__{} = cmd, kwopts) when is_list(kwopts) do
@@ -155,9 +158,9 @@ defmodule Coach.Cmd.Shell do
     raise "#{inspect opt} not supported in Cmd"
   end
 
-  @spec with_value(t, value) :: t
-  def with_value(%__MODULE__{} = cmd, value) when is_binary(value) do
-    add_arg(cmd, {:value, value})
+  @spec with_value(t, value, [condition]) :: t
+  def with_value(%__MODULE__{} = cmd, value, conditions \\ []) do
+    if Enum.all?(conditions, &condition_met?/1), do: add_arg(cmd, {:value, value}), else: cmd
   end
 
   defp add_arg(%__MODULE__{args: args} = cmd, arg) do
@@ -173,6 +176,32 @@ defmodule Coach.Cmd.Shell do
         ({:value, value}) -> value
        end)
     |> List.flatten
+  end
+
+  @spec condition_met?({:if, conditional} | {:unless, conditional}) :: term
+  def condition_met?({:if, conditional}) when is_function(conditional, 0) do
+    conditional.()
+  end
+
+  def condition_met?({:if, {conditional, args}}) when is_function(conditional) and is_list(args) do
+    :erlang.apply(conditional, args)
+  end
+
+  def condition_met?({:if, {m, f, a}})
+  when is_atom(m) and is_atom(f) and is_list(a) do
+    :erlang.apply(m, f, a)
+  end
+
+  def condition_met?({:if, conditional}), do: conditional
+
+  def condition_met?({:unless, conditional}) do
+    if condition_met?({:if, conditional}), do: false, else: true
+  end
+end
+
+defimpl Commandable, for: Coach.Cmd.Shell do
+  def to_cmd(t) do
+    t
   end
 end
 

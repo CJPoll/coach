@@ -7,6 +7,7 @@ defmodule Coach.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     dialyzer: [ignore_warnings: "dialyzer.ignore-warnings"],
      aliases: aliases(),
      deps: deps()]
   end
