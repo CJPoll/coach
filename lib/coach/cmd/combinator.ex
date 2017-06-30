@@ -21,17 +21,17 @@ defmodule Coach.Cmd.Combinator do
 
   @spec ensure(combinable, combinable) :: t
   def ensure(first, second) do
-    %Ensure{first: first, second: second}
+    %Ensure{first: first |> Cmd.to_cmd, second: second |> Cmd.to_cmd}
   end
 
   @spec then(combinable, combinable) :: t
   def then(first, second) do
-    %And{first: first, second: second}
+    %And{first: first |> Cmd.to_cmd, second: second |> Cmd.to_cmd}
   end
 
   @spec otherwise(combinable, combinable) :: t
   def otherwise(first, second) do
-    %Or{first: first, second: second}
+    %Or{first: first |> Cmd.to_cmd, second: second |> Cmd.to_cmd}
   end
 
   @spec run(t) :: Cmd.cmd_return
@@ -61,4 +61,19 @@ defmodule Coach.Cmd.Combinator do
 
     result
   end
+end
+
+defimpl Commandable, for: Coach.Cmd.Combinator.And do
+  @mod Coach.Cmd.Combinator.And
+  def to_cmd(%@mod{} = commandable), do: commandable
+end
+
+defimpl Commandable, for: Coach.Cmd.Combinator.Or do
+  @mod Coach.Cmd.Combinator.Or
+  def to_cmd(%@mod{} = commandable), do: commandable
+end
+
+defimpl Commandable, for: Coach.Cmd.Combinator.Ensure do
+  @mod Coach.Cmd.Combinator.Ensure
+  def to_cmd(%@mod{} = commandable), do: commandable
 end

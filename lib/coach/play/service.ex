@@ -75,21 +75,40 @@ defmodule Coach.Play.Service do
       with_service(commandable, service)
     end)
   end
+
+  def tmux_active? do
+    "TMUX"
+    |> System.get_env
+    |> tmux_active?
+  end
+
+  def tmux_active?(nil), do: false
+  def tmux_active?(bin) when is_binary(bin) do
+    bin = bin |> IO.inspect |> String.trim
+    bin != ""
+  end
 end
 
 defimpl Commandable, for: Coach.Play.Service do
   alias Coach.Cmd.{Combinator, Shell}
 
-  def to_cmd(%Coach.Play.Service{os: nil} = commandable) do
+  @mod Coach.Play.Service
+
+  def to_cmd(%@mod{os: nil} = commandable) do
     os = Coach.Os.current_os()
-    to_cmd(%Coach.Play.Service{commandable | os: os})
+    to_cmd(%@mod{commandable | os: os})
   end
 
-  def to_cmd(%Coach.Play.Service{action: nil}) do
-    raise "Coach.Play.Service requires you to set an action"
+  def to_cmd(%@mod{action: nil}) do
+    raise "#{@mod} requires you to set an action"
   end
 
-  def to_cmd(%Coach.Play.Service{os: :mac} = commandable) do
+  def to_cmd(%@mod{os: :mac} = commandable) do
+    IO.inspect("Checking TMUX:")
+    if @mod.tmux_active? |> IO.inspect do
+      raise "brew services can't run under tmux - this command will fail: #{inspect commandable}"
+    end
+
     action =
       Shell.new()
       |> Shell.with_command("brew")

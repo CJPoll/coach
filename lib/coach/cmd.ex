@@ -1,5 +1,6 @@
 defmodule Coach.Cmd do
   alias Coach.Cmd.{Combinator, Function, Shell}
+  alias Coach.Cmd.Combinator.{And, Or, Ensure}
 
   defdelegate to_cmd(commandable), to: Commandable
 
@@ -16,6 +17,9 @@ defmodule Coach.Cmd do
     |> do_run
   end
 
+  def do_run(%And{} = cmd), do: Combinator.run(cmd)
+  def do_run(%Or{} = cmd), do: Combinator.run(cmd)
+  def do_run(%Ensure{} = cmd), do: Combinator.run(cmd)
   def do_run(%Shell{} = cmd), do: Shell.run(cmd)
   def do_run(%Function{} = cmd), do: Function.run(cmd)
 
