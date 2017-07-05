@@ -60,7 +60,7 @@ defimpl Commandable, for: Coach.Play.Download do
         |> Shell.with_command("echo")
         |> Shell.with_value("Not downloading #{URI.to_string(commandable.uri)}. #{commandable.to} already exists")
       else
-        shell(%Coach.Play.Download{commandable | check_exists: false})
+        shell(%Coach.Play.Download{commandable | check_exists: false}) |> Coach.Cmd.run
       end
     end)
   end
