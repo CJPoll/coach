@@ -77,13 +77,16 @@ defmodule Coach.Play.Service do
   end
 
   def tmux_active? do
+    env = System.get_env("MIX_ENV")
+
     "TMUX"
     |> System.get_env
-    |> tmux_active?
+    |> tmux_active?(env)
   end
 
-  def tmux_active?(nil), do: false
-  def tmux_active?(bin) when is_binary(bin) do
+  def tmux_active(_, "test"), do: false
+  def tmux_active?(nil, _), do: false
+  def tmux_active?(bin, _) when is_binary(bin) do
     bin = bin |> IO.inspect |> String.trim
     bin != ""
   end
@@ -105,7 +108,7 @@ defimpl Commandable, for: Coach.Play.Service do
 
   def to_cmd(%@mod{os: :mac} = commandable) do
     IO.inspect("Checking TMUX:")
-    if @mod.tmux_active? |> IO.inspect do
+    if @mod.tmux_active? do
       raise "brew services can't run under tmux - this command will fail: #{inspect commandable}"
     end
 

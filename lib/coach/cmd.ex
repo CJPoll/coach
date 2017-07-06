@@ -36,9 +36,9 @@ defmodule Coach.Cmd do
 end
 
 defprotocol Commandable do
-  alias Coach.Cmd.{Function, Shell}
+  alias Coach.Cmd.{Function, Shell, Combinator}
 
-  @spec to_cmd(t) :: Shell.t | Function.t
+  @spec to_cmd(t) :: Shell.t | Function.t | Combinator.t
   def to_cmd(t)
 end
 
