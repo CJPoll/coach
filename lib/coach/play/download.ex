@@ -76,7 +76,7 @@ defimpl Commandable, for: Coach.Play.Download do
     Shell.new
     |> Shell.with_command("curl")
     |> Shell.with_flag("--location")
-    |> Shell.with_flag("-o", commandable.to, unless: commandable.to == :stdout)
+    |> Shell.with_flag("-o", commandable.to, unless: commandable.to == :stdout, if: commandable.to)
     |> Shell.with_flag("--create-dirs", unless: commandable.to == :stdout)
     |> Shell.with_value(url)
   end
