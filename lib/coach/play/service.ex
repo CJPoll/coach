@@ -122,4 +122,15 @@ defimpl Commandable, for: Coach.Play.Service do
     |> Enum.map(fn(service) -> Shell.with_value(action, service) end)
     |> Enum.reduce(fn(right, left) -> Combinator.then(left, right) end)
   end
+
+  def to_cmd(%@mod{os: :debian} = commandable) do
+    commandable.services
+    |> Enum.map(fn(service) ->
+         Shell.new()
+         |> Shell.with_command("service")
+         |> Shell.with_value(service)
+         |> Shell.with_value("#{commandable.action}")
+       end)
+    |> Enum.reduce(fn(right, left) -> Combinator.then(left, right) end)
+  end
 end
