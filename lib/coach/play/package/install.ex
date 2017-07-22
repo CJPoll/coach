@@ -38,17 +38,22 @@ defimpl Commandable, for: Coach.Play.Package.Install do
   end
 
   def to_cmd(%@mod{current_os: :mac} = commandable) do
-    cmd =
-      Shell.new
-      |> Shell.with_command("brew")
-      |> Shell.with_value("install")
 
     packages = Map.get(commandable, :mac, [])
 
-    packages
-    |> :lists.reverse
-    |> Enum.reduce(cmd, fn(package, cmd) ->
-      Shell.with_value(cmd, package)
-    end)
+    if packages == [] do
+      Coach.Cmd.Function.from_function(fn -> nil end)
+    else
+      cmd =
+        Shell.new
+        |> Shell.with_command("brew")
+        |> Shell.with_value("install")
+
+      packages
+      |> :lists.reverse
+      |> Enum.reduce(cmd, fn(package, cmd) ->
+        Shell.with_value(cmd, package)
+      end)
+    end
   end
 end

@@ -8,22 +8,29 @@ defmodule Coach.Playbook do
 
   @type copy_opt :: {:from, Path.t} | {:to, Path.t}
 
-  @spec copy([copy_opt]) :: Coach.Play.Copy.t
-  def copy(opts) do
+  def apply(module, function, args, caller) do
+    mod = Macro.expand_once(module, caller)
+
+    quote do
+      Function.from_function(unquote(mod), unquote(function), unquote(args))
+    end
+  end
+
+  def copy(opts, _caller) do
     from = Keyword.get(opts, :from)
     to = Keyword.get(opts, :to)
 
     if to do
       quote do
         Coach.Play.Copy.new
-        |> Coach.Play.Copy.from(unquote(from))
+        |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
         |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
       end
     end
 
   end
 
-  def download(opts) do
+  def download(opts, _caller) do
     from = Keyword.get(opts, :from)
     to = Keyword.get(opts, :to)
     unless_downloaded = Keyword.get(opts, :unless_downloaded)
@@ -48,7 +55,29 @@ defmodule Coach.Playbook do
     end
   end
 
-  def git_clone(opts) do
+  def extract(opts, _caller) do
+    from = Keyword.get(opts, :from)
+    to = Keyword.get(opts, :to)
+    keep_newer_files = Keyword.get(opts, :keep_newer_files)
+    strip_components = Keyword.get(opts, :strip_components)
+
+    quote do
+      Coach.Playbook.extract(unquote(from), unquote(to), unquote(keep_newer_files), unquote(strip_components))
+    end
+  end
+
+  def extract(from, to, keep_newer_files, strip_components) do
+    alias Coach.Play.Extract
+    e =
+      Extract.new()
+      |> Extract.from(Coach.Path.path(from))
+      |> Extract.to(Coach.Path.path(to))
+    
+    e = if keep_newer_files, do: Extract.keep_newer_files(e), else: e
+    if strip_components, do: Extract.strip_components(e, strip_components), else: e
+  end
+
+  def git_clone(opts, _caller) do
     repo = Keyword.get(opts, :repo)
 
     if to = Keyword.get(opts, :to) do
@@ -64,7 +93,19 @@ defmodule Coach.Playbook do
     end
   end
 
-  def mkdir(path) do
+  def install(opts, _caller) do
+    packages = Keyword.get(opts, :packages, [])
+    packages = Keyword.get_values(opts, :package) ++ packages
+    os = Keyword.get(opts, :on)
+
+    quote do
+      Enum.reduce(unquote(packages), Coach.Play.Package.Install.new(), fn(package, installer) ->
+        Coach.Play.Package.Install.install(installer, unquote(os), package)
+      end)
+    end
+  end
+
+  def mkdir(path, _caller) do
     quote do
       Coach.Cmd.Shell.new()
       |> Coach.Cmd.Shell.with_command("mkdir")
@@ -79,23 +120,23 @@ defmodule Coach.Playbook do
     end
   end
 
-  def play(module, play) when is_atom(play) do
-    Code.ensure_compiled(module)
-    IO.inspect("play/2")
-    IO.inspect(module)
-    IO.inspect(play)
+  def play(module, play, caller) when is_atom(play) do
+    module
+    |> Macro.expand_once(caller)
+    |> Code.ensure_compiled
+
     quote do
       :erlang.apply(unquote(module), unquote(play), [])
     end
   end
 
-  def shell(str) when is_binary(str) do
+  def shell(str, _caller) when is_binary(str) do
     quote do
       Coach.Playbook.bash([unquote(str)])
     end
   end
 
-  def shell(opts) when is_list(opts) do
+  def shell(opts, _caller) when is_list(opts) do
     cmd = Keyword.get(opts, :command)
     args = Keyword.get(opts, :args)
 
@@ -108,7 +149,7 @@ defmodule Coach.Playbook do
     end
   end
 
-  def touch(path) do
+  def touch(path, _caller) do
     quote do
       Coach.Cmd.Shell.new()
       |> Coach.Cmd.Shell.with_command("touch")
@@ -124,23 +165,24 @@ defmodule Coach.Playbook do
     end)
   end
 
-  def build_play([do: {:__block__, _, cmds}], playbook) do
+  def build_play([do: {:__block__, _, cmds}], caller) do
+    module = caller.module
     Enum.map(cmds, fn
       ({:play, _, [play]}) ->
         quote do
-          :erlang.apply(unquote(playbook), unquote(play), [])
+          :erlang.apply(unquote(module), unquote(play), [])
         end
       ({func, _, args}) ->
-        :erlang.apply(Coach.Playbook, func, args)
+        :erlang.apply(Coach.Playbook, func, args ++ [caller])
     end)
   end
 
-  def build_play([do: play], playbook) do
-    build_play([do: {:__block__, [], [play]}], playbook)
+  def build_play([do: play], caller) do
+    build_play([do: {:__block__, [], [play]}], caller)
   end
 
   defmacro defplay(name, body) do
-    ops = build_play(body, __CALLER__.module)
+    ops = build_play(body, __CALLER__)
 
     quote do
       def unquote(name)() do
