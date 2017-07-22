@@ -7,12 +7,13 @@ defmodule Coach.File do
   @spec ensure_deleted(Path.t) :: Cmd.t
   def ensure_deleted(path) do
     Function.from_function(fn ->
-      if File.exists?(path) do
+      file_path = Coach.Path.path(path)
+      if File.exists?(file_path) do
         Shell.new()
         |> Shell.with_command("rm")
         |> Shell.with_flag("-r")
         |> Shell.with_flag("-f")
-        |> Shell.with_value(path)
+        |> Shell.with_value(file_path)
         |> Cmd.run
       end
     end)

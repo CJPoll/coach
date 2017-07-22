@@ -53,6 +53,13 @@ defmodule Coach.Playbook do
     end
   end
 
+  def delete(opts, _caller) do
+    file = Keyword.get(opts, :file)
+    quote do
+      Coach.File.ensure_deleted(unquote(file))
+    end
+  end
+
   def download(opts, _caller) do
     from = Keyword.get(opts, :from)
     to = Keyword.get(opts, :to)
