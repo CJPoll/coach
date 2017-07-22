@@ -1,10 +1,14 @@
 defmodule Coach.Play.Copy do
-  defstruct [from: nil, parent_dirs: false, shell: true, to: nil]
+  defstruct [from: nil, chown: nil, parent_dirs: false, shell: true, to: nil]
   @type t :: %__MODULE__{}
 
   @spec new() :: t
   def new() do
     %__MODULE__{}
+  end
+
+  def chown(%__MODULE__{} = commandable, owner) do
+    %__MODULE__{commandable | chown: owner}
   end
 
   @spec from(t, Path.t) :: t
@@ -33,11 +37,22 @@ defimpl Commandable, for: Coach.Play.Copy do
   @spec to_cmd(Coach.Play.Copy.t) :: Shell.t
   def to_cmd(%Coach.Play.Copy{from: from, to: to, shell: true} = commandable)
   when is_binary(from) and is_binary(to) do
-    Shell.new()
-    |> Shell.with_command("cp")
-    |> Shell.with_flag("-r", if: commandable.parent_dirs)
-    |> Shell.with_value(from)
-    |> Shell.with_value(to)
+    cmd =
+      Shell.new()
+      |> Shell.with_command("cp")
+      |> Shell.with_flag("-r", if: commandable.parent_dirs)
+      |> Shell.with_value(from)
+      |> Shell.with_value(to)
+
+      if commandable.chown do
+        chown =
+          Shell.new()
+          |> Shell.with_command("chown")
+          |> Shell.with_value(commandable.chown)
+          |> Shell.with_value(to)
+
+        %Coach.Cmd.Combinator.And{first: cmd, second: chown}
+      end
   end
 
   def to_cmd(%Coach.Play.Copy{from: from, to: to, shell: false, parent_dirs: true}) do

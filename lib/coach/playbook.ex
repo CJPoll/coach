@@ -19,22 +19,26 @@ defmodule Coach.Playbook do
   def copy(opts, _caller) do
     from = Keyword.get(opts, :from)
     to = Keyword.get(opts, :to)
+    chown = Keyword.get(opts, :chown)
 
     if to do
       quote do
-        Coach.Play.Copy.new
+        Coach.Play.Copy.new()
         |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
         |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
+        |> Coach.Play.Copy.chown(unquote(chown))
       end
     end
   end
 
   def create_user(opts, _caller) do
     user = Keyword.get(opts, :user)
+    home = Keyword.get(opts, :home)
 
     quote do
       Coach.Play.User.Create.new()
       |> Coach.Play.User.Create.user(unquote(user))
+      |> Coach.Play.User.Create.with_home(unquote(home))
     end
   end
 
