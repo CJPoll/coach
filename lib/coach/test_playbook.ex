@@ -9,6 +9,10 @@ defmodule Coach.TestPlaybook do
   alias Coach.DummyModule
   alias Coach.TestPlaybook2
 
+  defplay :test_bash do
+    shell "echo hi there"
+  end
+
   defplay :test_copy do
     change_shell shell: "/bin/bash", user: "cj"
     copy from: {:home, ".bashrc"}, to: {:tmp, ".bashrc"}, chown: "cjpoll"
