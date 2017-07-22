@@ -10,6 +10,7 @@ defmodule Coach.TestPlaybook do
   alias Coach.TestPlaybook2
 
   defplay :test_copy do
+    create_user user: "cj"
     copy from: {:home, ".bashrc"}, to: {:tmp, ".bashrc"}
   end
 

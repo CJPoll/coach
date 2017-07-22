@@ -25,10 +25,17 @@ defmodule Coach.Playbook do
         Coach.Play.Copy.new
         |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
         |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
-        |> Coach.Cmd.to_cmd
       end
     end
+  end
 
+  def create_user(opts, _caller) do
+    user = Keyword.get(opts, :user)
+
+    quote do
+      Coach.Play.User.Create.new()
+      |> Coach.Play.User.Create.user(unquote(user))
+    end
   end
 
   def download(opts, _caller) do
@@ -192,6 +199,7 @@ defmodule Coach.Playbook do
         ops = unquote(ops)
 
         ops
+        |> Enum.map(fn(cmd) -> Coach.Cmd.to_cmd(cmd) end)
         |> Enum.map(fn
              (%Coach.Cmd.Shell{} = op) -> if user, do: Coach.Cmd.Shell.as_user(op, user), else: op
              (op) -> op
