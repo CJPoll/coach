@@ -128,7 +128,7 @@ defmodule Coach.Cmd.Shell do
     c = String.strip("#{command} #{arg_string(cmd)}")
 
     if cmd.user do
-      "su - #{cmd.user} -c #{c}"
+      "su - #{cmd.user} -c '#{c}'"
     else 
       c
     end
