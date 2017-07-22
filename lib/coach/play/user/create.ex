@@ -31,6 +31,7 @@ defimpl Commandable, for: Coach.Play.User.Create do
     Shell.new()
     |> Shell.with_command("useradd")
     |> Shell.with_flag("-d", commandable.home, if: commandable.home)
+    |> Shell.with_flag("-m", if: commandable.home)
     |> Shell.with_value(commandable.user)
   end
 end
