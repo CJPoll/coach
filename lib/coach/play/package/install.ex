@@ -56,4 +56,24 @@ defimpl Commandable, for: Coach.Play.Package.Install do
       end)
     end
   end
+
+  def to_cmd(%@mod{current_os: :debian} = commandable) do
+
+    packages = Map.get(commandable, :debian, [])
+
+    if packages == [] do
+      Coach.Cmd.Function.from_function(fn -> nil end)
+    else
+      cmd =
+        Shell.new
+        |> Shell.with_command("apt-get")
+        |> Shell.with_value("install")
+
+      packages
+      |> :lists.reverse
+      |> Enum.reduce(cmd, fn(package, cmd) ->
+        Shell.with_value(cmd, package)
+      end)
+    end
+  end
 end
