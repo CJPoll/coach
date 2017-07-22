@@ -180,7 +180,7 @@ defmodule Coach.Playbook do
     end
   end
 
-  def bash(a) do
+  def bash(a, _caller) do
     Coach.Cmd.Function.from_function(fn ->
       IO.puts("Running #{inspect a}")
       %Porcelain.Result{out: out, status: status} = :erlang.apply(Porcelain, :shell, a)
