@@ -127,9 +127,9 @@ defimpl Commandable, for: Coach.Play.Service do
     commandable.services
     |> Enum.map(fn(service) ->
          Shell.new()
-         |> Shell.with_command("service")
-         |> Shell.with_value(service)
+         |> Shell.with_command("systemctl")
          |> Shell.with_value("#{commandable.action}")
+         |> Shell.with_value(service)
        end)
     |> Enum.reduce(fn(right, left) -> Combinator.then(left, right) end)
   end
