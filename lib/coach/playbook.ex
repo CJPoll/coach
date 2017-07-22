@@ -16,6 +16,17 @@ defmodule Coach.Playbook do
     end
   end
 
+  def change_shell(opts, _caller) do
+    user = Keyword.get(opts, :user)
+    shell = Keyword.get(opts, :shell)
+
+    quote do
+      Coach.Play.Chsh.new()
+      |> Coach.Play.Chsh.user(unquote(user))
+      |> Coach.Play.Chsh.shell(unquote(shell))
+    end
+  end
+
   def copy(opts, _caller) do
     from = Keyword.get(opts, :from)
     to = Keyword.get(opts, :to)
