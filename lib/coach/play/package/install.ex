@@ -38,7 +38,6 @@ defimpl Commandable, for: Coach.Play.Package.Install do
   end
 
   def to_cmd(%@mod{current_os: :mac} = commandable) do
-
     packages = Map.get(commandable, :mac, [])
 
     if packages == [] do
@@ -58,7 +57,6 @@ defimpl Commandable, for: Coach.Play.Package.Install do
   end
 
   def to_cmd(%@mod{current_os: :debian} = commandable) do
-
     packages = Map.get(commandable, :debian, [])
 
     if packages == [] do
@@ -68,6 +66,7 @@ defimpl Commandable, for: Coach.Play.Package.Install do
         Shell.new
         |> Shell.with_command("apt-get")
         |> Shell.with_value("install")
+        |> Shell.with_flag("-y")
 
       packages
       |> :lists.reverse
