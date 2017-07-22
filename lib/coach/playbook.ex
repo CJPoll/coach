@@ -153,6 +153,22 @@ defmodule Coach.Playbook do
     end
   end
 
+  def service(opts, _caller) do
+    action = Keyword.get(opts, :action)
+    services = Keyword.get_values(opts, :service)
+    services = Keyword.get(opts, :services, []) ++ services
+
+    quote do
+      svc =
+        Coach.Play.Service.new()
+        |> Coach.Play.Service.with_action(unquote(action))
+
+      Enum.reduce(unquote(services), svc, fn(service, svc) ->
+        Coach.Play.Service.with_service(svc, service)
+      end)
+    end
+  end
+
   def shell(str, _caller) when is_binary(str) do
     quote do
       Coach.Playbook.bash([unquote(str)])

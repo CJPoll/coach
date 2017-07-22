@@ -13,6 +13,10 @@ defmodule Coach.TestPlaybook do
     shell "echo hi there"
   end
 
+  defplay :services do
+    service action: :stop, service: "redis", services: ["rabbitmq", "postgresql"]
+  end
+
   defplay :test_copy do
     change_shell shell: "/bin/bash", user: "cj"
     copy from: {:home, ".bashrc"}, to: {:tmp, ".bashrc"}, chown: "cjpoll"
