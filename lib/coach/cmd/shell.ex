@@ -11,6 +11,7 @@ defmodule Coach.Cmd.Shell do
   @type status_code :: non_neg_integer
   @type value :: String.t
   @type return :: {term, status_code}
+  @type username :: String.t
 
   @typep arguments :: [argument] | []
   @type env :: [{env_var_name, env_var_value}]
@@ -24,12 +25,13 @@ defmodule Coach.Cmd.Shell do
     optional(:stderr_to_stdout) => boolean
   }
 
-  defstruct [args: [], command: nil, opts: %{}]
+  defstruct [args: [], command: nil, opts: %{}, user: nil]
 
   @type t :: %__MODULE__{
     args: arguments,
     command: maybe(command),
-    opts: opts
+    opts: opts,
+    user: nil | username
   }
 
   @opts [:into, :cd, :env, :arg0, :stderr_to_stdout, :parallelism]
@@ -46,6 +48,11 @@ defmodule Coach.Cmd.Shell do
     cmd
     |> arg_list
     |> Enum.join(" ")
+  end
+
+  @spec as_user(t, username) :: t
+  def as_user(%__MODULE__{} = cmd, user) do
+    %__MODULE__{cmd | user: user}
   end
 
   @spec command(t) :: String.t
@@ -107,8 +114,10 @@ defmodule Coach.Cmd.Shell do
     do_run(cmd)
   end
 
-  defp do_run(%__MODULE__{command: command, opts: opts} = cmd) do
-    System.cmd(command, build_args(cmd), Map.to_list(opts))
+  defp do_run(%__MODULE__{} = cmd) do
+    str = __MODULE__.to_string(cmd)
+    %Porcelain.Result{out: out, status: status} = Porcelain.shell(str)
+    {out, status}
   end
 
   @spec status_code({Collectable.t, status_code}) :: status_code
@@ -116,7 +125,13 @@ defmodule Coach.Cmd.Shell do
 
   @spec to_string(t) :: String.t
   def to_string(%__MODULE__{command: command} = cmd) do
-    String.strip("#{command} #{arg_string(cmd)}")
+    c = String.strip("#{command} #{arg_string(cmd)}")
+
+    if cmd.user do
+      "su - #{cmd.user} -c #{c}"
+    else 
+      c
+    end
   end
 
   @spec with_command(t, command) :: t
@@ -214,6 +229,6 @@ end
 defimpl Inspect, for: Coach.Cmd.Shell do
   def inspect(%Coach.Cmd.Shell{} = cmd, _opts) do
     str = String.Chars.to_string(cmd)
-    "#Coach.Cmd<#{str}>"
+    "#Coach.Cmd.Shell<#{str}>"
   end
 end

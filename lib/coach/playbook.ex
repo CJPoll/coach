@@ -12,7 +12,7 @@ defmodule Coach.Playbook do
     mod = Macro.expand_once(module, caller)
 
     quote do
-      Function.from_function(unquote(mod), unquote(function), unquote(args))
+      Coach.Cmd.Function.from_function(unquote(mod), unquote(function), unquote(args))
     end
   end
 
@@ -25,6 +25,7 @@ defmodule Coach.Playbook do
         Coach.Play.Copy.new
         |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
         |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
+        |> Coach.Cmd.to_cmd
       end
     end
 
@@ -185,10 +186,17 @@ defmodule Coach.Playbook do
     ops = build_play(body, __CALLER__)
 
     quote do
-      def unquote(name)() do
-        Enum.reduce(unquote(ops), fn(right, left) ->
-          Coach.Cmd.Combinator.then(left, right)
-        end)
+      def unquote(name)(opts \\ []) do
+        user = Keyword.get(opts, :run_as, nil)
+
+        ops = unquote(ops)
+
+        ops
+        |> Enum.map(fn
+             (%Coach.Cmd.Shell{} = op) -> if user, do: Coach.Cmd.Shell.as_user(op, user), else: op
+             (op) -> op
+           end)
+       |> Enum.reduce(fn(right, left) -> Coach.Cmd.Combinator.then(left, right) end)
       end
     end
   end

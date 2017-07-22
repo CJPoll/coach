@@ -18,8 +18,8 @@ defmodule Coach.Mixfile do
   end
 
   defp aliases do
-    ["compile": ["compile --warnings-as-errors"],
-     "test": ["test", "dialyzer --halt-exit-status"]]
+    ["compile": ["compile --warnings-as-errors"]]
+     #"test": ["test", "dialyzer --halt-exit-status"]]
   end
 
   defp deps do

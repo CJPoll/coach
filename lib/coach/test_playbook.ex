@@ -9,6 +9,10 @@ defmodule Coach.TestPlaybook do
   alias Coach.DummyModule
   alias Coach.TestPlaybook2
 
+  defplay :test_copy do
+    copy from: {:home, ".bashrc"}, to: {:tmp, ".bashrc"}
+  end
+
   defplay :do_thing do
     copy from: "mix.exs", to: "mix.exs.bak"
     copy from: "mix.exs.bak", to: "mix.exs.bak1"
