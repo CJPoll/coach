@@ -54,6 +54,18 @@ defmodule Coach.Playbook do
     end
   end
 
+  def mv(opts, _caller) do
+    from = Keyword.get(opts, :from)
+    to = Keyword.get(opts, :to)
+
+    quote do
+      Coach.Cmd.Shell.new()
+      |> Coach.Cmd.Shell.with_command("mv")
+      |> Coach.Cmd.Shell.with_value(Coach.Path.path(unquote(from)))
+      |> Coach.Cmd.Shell.with_value(Coach.Path.path(unquote(to)))
+    end
+  end
+
   def create_user(opts, _caller) do
     user = Keyword.get(opts, :user)
     home = Keyword.get(opts, :home)
@@ -203,6 +215,19 @@ defmodule Coach.Playbook do
       end)
       |> Coach.Cmd.Shell.with_command(unquote(cmd))
       |> Coach.Cmd.Shell.as_user(unquote(as_user))
+    end
+  end
+
+  def symlink(opts, _caller) do
+    from = Keyword.get(opts, :from)
+    to = Keyword.get(opts, :to)
+
+    quote do
+      Coach.Cmd.Shell.new()
+      |> Coach.Cmd.Shell.with_command("ln")
+      |> Coach.Cmd.Shell.with_flag("-s")
+      |> Coach.Cmd.Shell.with_value(Coach.Path.path(unquote(to)))
+      |> Coach.Cmd.Shell.with_value(Coach.Path.path(unquote(from)))
     end
   end
 
