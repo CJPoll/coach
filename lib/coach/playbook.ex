@@ -185,6 +185,7 @@ defmodule Coach.Playbook do
   def shell(opts, _caller) when is_list(opts) do
     cmd = Keyword.get(opts, :command)
     args = Keyword.get(opts, :args)
+    as_user = Keyword.get(opts, :as_user)
 
     quote do
       unquote(args)
@@ -192,6 +193,7 @@ defmodule Coach.Playbook do
         Coach.Cmd.Shell.with_value(cmd, arg)
       end)
       |> Coach.Cmd.Shell.with_command(unquote(cmd))
+      |> Coach.Cmd.Shell.as_user(unquote(as_user))
     end
   end
 
