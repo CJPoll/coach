@@ -8,9 +8,11 @@ defmodule Coach.TestPlaybook do
   use Coach.Playbook
   alias Coach.DummyModule
   alias Coach.TestPlaybook2
+  alias Coach.Play.Postgres
 
   defplay :test_bash do
     shell "echo hi there"
+    Postgres.create_user user: "dev", permissions: [:superuser]
   end
 
   defplay :test_delete do

@@ -35,24 +35,25 @@ defimpl Commandable, for: Coach.Play.Copy do
   alias Coach.Cmd.{Function, Shell}
 
   @spec to_cmd(Coach.Play.Copy.t) :: Shell.t
-  def to_cmd(%Coach.Play.Copy{from: from, to: to, shell: true} = commandable)
-  when is_binary(from) and is_binary(to) do
+  def to_cmd(%Coach.Play.Copy{from: from, to: to, shell: true} = commandable) do
     cmd =
       Shell.new()
       |> Shell.with_command("cp")
       |> Shell.with_flag("-r", if: commandable.parent_dirs)
-      |> Shell.with_value(from)
-      |> Shell.with_value(to)
+      |> Shell.with_value(Coach.Path.path(from))
+      |> Shell.with_value(Coach.Path.path(to))
 
-      if commandable.chown do
-        chown =
-          Shell.new()
-          |> Shell.with_command("chown")
-          |> Shell.with_value(commandable.chown)
-          |> Shell.with_value(to)
+    if commandable.chown do
+      chown =
+        Shell.new()
+        |> Shell.with_command("chown")
+        |> Shell.with_value(commandable.chown)
+        |> Shell.with_value(to)
 
-        %Coach.Cmd.Combinator.And{first: cmd, second: chown}
-      end
+      %Coach.Cmd.Combinator.And{first: cmd, second: chown}
+    else
+      cmd
+    end
   end
 
   def to_cmd(%Coach.Play.Copy{from: from, to: to, shell: false, parent_dirs: true}) do

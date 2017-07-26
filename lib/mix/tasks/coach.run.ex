@@ -1,8 +1,12 @@
 defmodule Mix.Tasks.Coach.Run do
   use Mix.Task
 
-  def run([module, play]) do
+  def run([app, module, play]) do
     Application.ensure_all_started(:coach)
+
+    app
+    |> String.to_atom
+    |> Application.ensure_all_started
 
     mod = get_module(module)
     func = String.to_atom(play) # Yes, I know.

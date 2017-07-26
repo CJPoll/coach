@@ -3,8 +3,8 @@ defmodule Coach.Play.User.Create do
 
   defstruct [:home, :user]
   @type t :: %__MODULE__{
-    user: username,
-    home: Path.t
+    user: username | nil,
+    home: Path.t | nil
   }
 
   @spec new() :: t

@@ -18,12 +18,13 @@ defmodule Coach.Mixfile do
   end
 
   defp aliases do
-    ["compile": ["compile --warnings-as-errors"]]
-     #"test": ["test", "dialyzer --halt-exit-status"]]
+    ["compile": ["compile --warnings-as-errors"],
+     "test": ["test", "dialyzer --halt-exit-status"]]
   end
 
   defp deps do
-    [{:dialyxir, "~> 0.5.0"},
-     {:porcelain, "~> 2.0.0"}]
+    [{:dialyxir, "~> 0.5.0", only: [:dev, :test]},
+     {:porcelain, "~> 2.0.0"},
+     {:proplist, git: "git@github.com:cjpoll/proplist", ref: "master"}]
   end
 end

@@ -187,7 +187,7 @@ defmodule Coach.Cmd.Shell.Test do
   describe "as_user/2" do
     @tag current: true
     test "runs the command as a particular user" do
-      assert "su - fakeuser -c echo \"Hello\" \"World\"" =
+      assert "su - fakeuser -c 'echo \"Hello\" \"World\"'" =
         @test_module.new()
         |> @test_module.with_command("echo")
         |> @test_module.with_value("Hello")

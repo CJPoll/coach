@@ -1,4 +1,12 @@
 defmodule Coach.Path do
+  @type username :: String.t
+  @type t :: Path.t
+  | {:priv, Path.t}
+  | {:system, Path.t}
+  | {:tmp, Path.t}
+  | {:home, Path.t}
+  | {:home, username, Path.t}
+
   def path({:priv, path}) do
     Path.join([File.cwd!(), "priv", path(path)])
   end

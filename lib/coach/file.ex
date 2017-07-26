@@ -4,7 +4,7 @@ defmodule Coach.File do
 
   @type file_type :: :dir | :file
 
-  @spec ensure_deleted(Path.t) :: Cmd.t
+  @spec ensure_deleted(Coach.Path.t) :: Cmd.t
   def ensure_deleted(path) do
     Function.from_function(fn ->
       file_path = Coach.Path.path(path)
@@ -19,9 +19,10 @@ defmodule Coach.File do
     end)
   end
 
-  @spec ensure_exists(Path.t, file_type) :: Cmd.t
+  @spec ensure_exists(Coach.Path.t, file_type) :: Cmd.t
   def ensure_exists(path, :dir) do
     Function.from_function(fn ->
+      path = Coach.Path.path(path)
       unless File.exists?(path) do
         File.mkdir_p(path)
       end

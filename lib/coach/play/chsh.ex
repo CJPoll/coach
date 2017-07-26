@@ -4,8 +4,8 @@ defmodule Coach.Play.Chsh do
 
   defstruct [:shell, :user]
   @type t :: %__MODULE__{
-    user: user,
-    shell: shell
+    user: user | nil,
+    shell: shell | nil
   }
 
   @spec new() :: t

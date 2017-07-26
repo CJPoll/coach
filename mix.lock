@@ -1,2 +1,4 @@
 %{"dialyxir": {:hex, :dialyxir, "0.5.0", "5bc543f9c28ecd51b99cc1a685a3c2a1a93216990347f259406a910cf048d1d7", [:mix], [], "hexpm"},
-  "porcelain": {:hex, :porcelain, "2.0.3", "2d77b17d1f21fed875b8c5ecba72a01533db2013bd2e5e62c6d286c029150fdc", [:mix], [], "hexpm"}}
+  "porcelain": {:hex, :porcelain, "2.0.3", "2d77b17d1f21fed875b8c5ecba72a01533db2013bd2e5e62c6d286c029150fdc", [:mix], [], "hexpm"},
+  "proplist": {:git, "git@github.com:cjpoll/proplist", "91dfecb779dd47a8ba6a767787cd8ed171bfa21a", [ref: "master"]},
+  "proplists": {:git, "git@github.com:cjpoll/proplist", "91dfecb779dd47a8ba6a767787cd8ed171bfa21a", [ref: "master"]}}

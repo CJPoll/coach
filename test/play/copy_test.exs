@@ -9,12 +9,15 @@ defmodule Coach.Play.Copy.Test do
   @destination_file "/tmp/fileb"
 
   describe "as shell" do
+    @tag current: true
     test "uses the cp command" do
       shell =
         @test_module.new()
         |> @test_module.from(@source_file)
         |> @test_module.to(@destination_file)
+        |> IO.inspect
         |> Cmd.to_cmd
+        |> IO.inspect
 
       assert Shell.command?(shell, "cp")
     end

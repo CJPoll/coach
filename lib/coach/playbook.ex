@@ -218,6 +218,7 @@ defmodule Coach.Playbook do
         quote do
           :erlang.apply(unquote(module), unquote(play), [])
         end
+      ({{:".", _, _}, _, _} = thing) -> thing
       ({func, _, args}) ->
         :erlang.apply(Coach.Playbook, func, args ++ [caller])
     end)
