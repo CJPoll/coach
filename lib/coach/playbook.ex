@@ -109,17 +109,14 @@ defmodule Coach.Playbook do
 
   def git_clone(opts, _caller) do
     repo = Keyword.get(opts, :repo)
+    branch = Keyword.get(opts, :branch)
+    to = Keyword.get(opts, :to)
 
-    if to = Keyword.get(opts, :to) do
-      quote do
-        Coach.Play.Git.Clone.new()
-        |> Coach.Play.Git.Clone.from_repo(unquote(repo))
-        |> Coach.Play.Git.Clone.to_directory(Coach.Path.path(unquote(to)))
-      end
-    else
-      quote do
-        Coach.Play.Git.Clone.new() |> Coach.Play.Git.Clone.from_repo(unquote(repo))
-      end
+    quote do
+      Coach.Play.Git.Clone.new()
+      |> Coach.Play.Git.Clone.from_repo(unquote(repo))
+      |> Coach.Play.Git.Clone.to_directory(Coach.Path.path(unquote(to)))
+      |> Coach.Play.Git.Clone.branch(unquote(branch))
     end
   end
 

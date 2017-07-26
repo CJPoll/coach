@@ -6,6 +6,9 @@ defmodule Coach.Path do
   | {:tmp, Path.t}
   | {:home, Path.t}
   | {:home, username, Path.t}
+  | nil
+
+  def path(nil), do: nil
 
   def path({:priv, path}) do
     Path.join([File.cwd!(), "priv", path(path)])
