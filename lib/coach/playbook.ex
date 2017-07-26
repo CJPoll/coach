@@ -27,18 +27,30 @@ defmodule Coach.Playbook do
     end
   end
 
+  def chown(opts, _caller) do
+    file = Keyword.get(opts, :file)
+    recursive = Keyword.get(opts, :recursive)
+    owner = Keyword.get(opts, :owner)
+
+    quote do
+      Coach.Cmd.Shell.new()
+      |> Coach.Cmd.Shell.with_command("chown")
+      |> Coach.Cmd.Shell.with_flag("-R", if: unquote(recursive))
+      |> Coach.Cmd.Shell.with_value(unquote(owner))
+      |> Coach.Cmd.Shell.with_value(Coach.Path.path(unquote(file)))
+    end
+  end
+
   def copy(opts, _caller) do
     from = Keyword.get(opts, :from)
     to = Keyword.get(opts, :to)
     chown = Keyword.get(opts, :chown)
 
-    if to do
-      quote do
-        Coach.Play.Copy.new()
-        |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
-        |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
-        |> Coach.Play.Copy.chown(unquote(chown))
-      end
+    quote do
+      Coach.Play.Copy.new()
+      |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
+      |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
+      |> Coach.Play.Copy.chown(unquote(chown))
     end
   end
 
