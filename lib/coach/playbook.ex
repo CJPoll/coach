@@ -167,6 +167,12 @@ defmodule Coach.Playbook do
     end
   end
 
+  def password(opts, caller) do
+    user = Keyword.get(opts, :user)
+    password = Keyword.get(opts, :password)
+    shell("echo -e #{password}\n#{password} | passwd #{user}")
+  end
+
   def play(play) when is_atom(play) do
     quote do
       :erlang.apply(Coach.Playbook, play, [])
@@ -217,6 +223,17 @@ defmodule Coach.Playbook do
       end)
       |> Coach.Cmd.Shell.with_command(unquote(cmd))
       |> Coach.Cmd.Shell.as_user(unquote(as_user))
+    end
+  end
+
+  def sudoer(opts, _caller) do
+    user = Keyword.get(opts, :user)
+
+    quote do
+      Coach.Cmd.Shell.new()
+      |> Coach.Cmd.Shell.with_command("adduser")
+      |> Coach.Cmd.Shell.with_value(unquote(user))
+      |> Coach.Cmd.Shell.with_value("sudo")
     end
   end
 
