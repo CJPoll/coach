@@ -167,10 +167,12 @@ defmodule Coach.Playbook do
     end
   end
 
-  def password(opts, caller) do
+  def password(opts, _caller) do
     user = Keyword.get(opts, :user)
     password = Keyword.get(opts, :password)
-    shell("echo -e #{password}\n#{password} | passwd #{user}", caller)
+    quote do
+    Coach.Playbook.bash(["echo -e #{unquote(password)}\n#{unquote(password)} | passwd #{unquote(user)}"])
+    end
   end
 
   def play(play) when is_atom(play) do
