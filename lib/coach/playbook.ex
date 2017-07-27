@@ -170,7 +170,7 @@ defmodule Coach.Playbook do
   def password(opts, caller) do
     user = Keyword.get(opts, :user)
     password = Keyword.get(opts, :password)
-    shell("echo -e #{password}\n#{password} | passwd #{user}")
+    shell("echo -e #{password}\n#{password} | passwd #{user}", caller)
   end
 
   def play(play) when is_atom(play) do
