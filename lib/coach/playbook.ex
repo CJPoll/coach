@@ -51,7 +51,7 @@ defmodule Coach.Playbook do
       Coach.Play.Copy.new()
       |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
       |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
-      |> Coach.Play.Copy.chown(unquote(chown))
+      |> Coach.Play.Copy.chown("#{unquote(chown)}:#{unquote(chown)}")
       |> Coach.Play.Copy.recursive(unquote(recursive))
     end
   end
@@ -171,7 +171,7 @@ defmodule Coach.Playbook do
     user = Keyword.get(opts, :user)
     password = Keyword.get(opts, :password)
     quote do
-    Coach.Playbook.bash(["echo -e #{unquote(password)}\n#{unquote(password)} | passwd #{unquote(user)}"])
+      Coach.Playbook.bash(["echo -e #{unquote(password)}\n#{unquote(password)} | passwd #{unquote(user)}"])
     end
   end
 
