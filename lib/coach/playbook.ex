@@ -45,12 +45,14 @@ defmodule Coach.Playbook do
     from = Keyword.get(opts, :from)
     to = Keyword.get(opts, :to)
     chown = Keyword.get(opts, :chown)
+    recursive = Keyword.get(opts, :recursive)
 
     quote do
       Coach.Play.Copy.new()
       |> Coach.Play.Copy.from(Coach.Path.path(unquote(from)))
       |> Coach.Play.Copy.to(Coach.Path.path(unquote(to)))
       |> Coach.Play.Copy.chown(unquote(chown))
+      |> Coach.Play.Copy.recursive(unquote(recursive))
     end
   end
 

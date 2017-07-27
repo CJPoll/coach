@@ -1,5 +1,5 @@
 defmodule Coach.Play.Copy do
-  defstruct [from: nil, chown: nil, parent_dirs: false, shell: true, to: nil]
+  defstruct [from: nil, chown: nil, parent_dirs: false, recursive: false, shell: true, to: nil]
   @type t :: %__MODULE__{}
 
   @spec new() :: t
@@ -14,6 +14,11 @@ defmodule Coach.Play.Copy do
   @spec from(t, Path.t) :: t
   def from(copier, path) do
     %__MODULE__{copier | from: path}
+  end
+
+  @spec recursive(t, boolean) :: t
+  def recursive(%__MODULE__{} = commandable, recursive) do
+    %__MODULE__{commandable | recursive: recursive}
   end
 
   @spec to(t, Path.t) :: t
@@ -40,6 +45,7 @@ defimpl Commandable, for: Coach.Play.Copy do
       Shell.new()
       |> Shell.with_command("cp")
       |> Shell.with_flag("-r", if: commandable.parent_dirs)
+      |> Shell.with_flag("-a", if: commandable.recursive)
       |> Shell.with_value(Coach.Path.path(from))
       |> Shell.with_value(Coach.Path.path(to))
 
